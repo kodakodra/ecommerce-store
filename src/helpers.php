@@ -53,3 +53,11 @@ function redirect(string $path): never { header('Location: '.url($path),true,303
 function site_origin(array $store): string { $origin=rtrim((string)($store['site_url']??''),'/'); return $origin!==''?$origin:'http://localhost:8000'; }
 function absolute_url(string $path,array $store): string { return site_origin($store).url($path); }
 function money(int $pence,array $store): string { return ($store['currency_symbol']??'£').number_format($pence/100,2); }
+
+function product_image(array $store, string $slug): ?string
+{
+    foreach ($store['products'] as $product) {
+        if (($product['slug'] ?? '') === $slug) return $product['image'] ?? null;
+    }
+    return null;
+}
