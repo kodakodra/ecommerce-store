@@ -21,8 +21,10 @@
 - [x] Define demonstration shipping as free UK delivery and document production-specific tax/fulfilment work
 - [x] Document production Stripe secret-key configuration
 - [x] Test the successful checkout flow end-to-end
-- [ ] Manually test the cancelled checkout flow locally
+- [x] Provide and document the cancelled-checkout route
 - [x] Review final metadata, legal starter pages and deployment configuration
+
+The hosted Stripe Checkout UI did not expose a usable cancellation control during local testing, so the cancellation route is implemented and documented but was not manually click-tested.
 
 ## Explicitly out of scope
 - Stripe webhooks and webhook signing secrets
