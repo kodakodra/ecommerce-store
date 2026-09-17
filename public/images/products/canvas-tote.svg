@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" role="img" aria-labelledby="title desc">
+<title id="title">Canvas Tote Bag</title><desc id="desc">A simple illustrated canvas tote bag.</desc>
+<rect width="800" height="600" rx="32" fill="#eaf0f8"/>
+<path d="M250 214h300l-24 286H274z" fill="#f5f7fb" stroke="#172033" stroke-width="14"/>
+<path d="M326 230v-56c0-43 33-76 74-76s74 33 74 76v56" fill="none" stroke="#172033" stroke-width="20" stroke-linecap="round"/>
+<path d="M318 336h164" stroke="#5ea6ff" stroke-width="12" stroke-linecap="round"/>
+<path d="M352 382h96" stroke="#172033" stroke-width="10" stroke-linecap="round" opacity=".7"/>
+</svg>
