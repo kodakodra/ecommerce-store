@@ -12,5 +12,6 @@ foreach($phpFiles as $file){$output=[];$code=0;exec('php -l '.escapeshellarg($fi
 require $root.'/vendor/autoload.php';require $root.'/src/helpers.php';$store=require $root.'/config/store.php';require $root.'/src/store.php';
 if(!class_exists('PHPMailer\\PHPMailer\\PHPMailer'))throw new RuntimeException('PHPMailer is unavailable.');
 if(!class_exists('Stripe\\StripeClient'))throw new RuntimeException('Stripe SDK is unavailable.');
+foreach($store['products'] as $product){$image=(string)($product['image']??'');if($image===''||!is_file($root.'/public'.url($image)))throw new RuntimeException('Product image asset missing: '.$product['slug']);}
 $tmp=tempnam(sys_get_temp_dir(),'ecommerce-test-');if($tmp===false)throw new RuntimeException('Could not create test database.');unlink($tmp);$db=store_db($store,$tmp);$count=(int)$db->query('SELECT COUNT(*) FROM products')->fetchColumn();if($count!==count($store['products']))throw new RuntimeException('Product seeding test failed.');if(money(2500,$store)!=='£25.00')throw new RuntimeException('Money formatting test failed.');$columns=array_column($db->query('PRAGMA table_info(orders)')->fetchAll(),'name');if(!in_array('confirmation_sent_at',$columns,true))throw new RuntimeException('Order confirmation column test failed.');unlink($tmp);
 echo 'Ecommerce smoke tests passed ('.count($phpFiles).' PHP files checked).'.PHP_EOL;
