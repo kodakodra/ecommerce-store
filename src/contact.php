@@ -38,3 +38,29 @@ function send_contact_message(array $data, array $store): bool
     $error=null; $body=implode(PHP_EOL,['New store enquiry','=================', '', 'Name: '.$data['name'],'Email: '.$data['email'],'','Message:',$data['message'],'','Sent from '.site_origin($store)]);
     return send_smtp_mail((string)env('CONTACT_EMAIL',$store['contact_email']),$data['email'],$data['name'],'Store enquiry from '.preg_replace('/[\r\n]+/',' ',$data['name']),$body,$error);
 }
+
+function send_order_confirmation(array $order, array $store): bool
+{
+    $error = null;
+    $lines = [
+        'Order confirmation',
+        '==================',
+        '',
+        'Order: '.$order['id'],
+        'Total: '.money((int)$order['total_pence'], $store),
+        '',
+    ];
+    foreach ($order['items'] as $item) {
+        $lines[] = $item['product_name'].' × '.$item['quantity'].' — '.money((int)$item['line_total_pence'], $store);
+    }
+    $lines[] = '';
+    $lines[] = 'Thank you for your order.';
+    return send_smtp_mail(
+        $order['customer_email'],
+        (string)env('CONTACT_EMAIL', $store['contact_email']),
+        $store['name'],
+        'Order confirmation '.$order['id'],
+        implode(PHP_EOL, $lines),
+        $error
+    );
+}
