@@ -16,12 +16,13 @@
 - [x] Documentation and MIT licence
 
 ## Store-specific refinement
-- [ ] Replace demo products/content with a real catalogue
-- [ ] Add real product images/assets
-- [ ] Review shipping, tax and fulfilment rules for the target business
-- [ ] Configure production Stripe secret key
-- [ ] Test successful and cancelled checkout flows
-- [ ] Review final metadata, legal text and deployment configuration
+- [x] Finalise the demonstration catalogue and product copy
+- [x] Add local product image assets
+- [x] Define demonstration shipping as free UK delivery and document production-specific tax/fulfilment work
+- [x] Document production Stripe secret-key configuration
+- [x] Test the successful checkout flow end-to-end
+- [ ] Manually test the cancelled checkout flow locally
+- [x] Review final metadata, legal starter pages and deployment configuration
 
 ## Explicitly out of scope
 - Stripe webhooks and webhook signing secrets
