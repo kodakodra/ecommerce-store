@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 $basePath=dirname(__DIR__);
+require $basePath.'/vendor/autoload.php';
 require $basePath.'/src/helpers.php';
 $store=require $basePath.'/config/store.php';
 require $basePath.'/src/store.php';
