@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" role="img" aria-labelledby="title desc">
+<title id="title">Everyday Hoodie</title><desc id="desc">A simple illustrated hoodie.</desc>
+<rect width="800" height="600" rx="32" fill="#eaf0f8"/>
+<path d="M280 188 202 238l64 110 48-30v126h172V318l48 30 64-110-78-50-64 78h-72z" fill="#5a6677"/>
+<path d="M314 192c12-55 54-78 86-78s74 23 86 78" fill="none" stroke="#172033" stroke-width="28" stroke-linecap="round"/>
+<path d="M334 206c3 28 21 43 66 43s63-15 66-43" fill="none" stroke="#eaf0f8" stroke-width="12" stroke-linecap="round"/>
+<path d="M352 390h96" stroke="#5ea6ff" stroke-width="10" stroke-linecap="round"/>
+</svg>
