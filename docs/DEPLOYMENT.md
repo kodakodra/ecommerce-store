@@ -8,14 +8,6 @@ Install production dependencies with:
 composer install --no-dev --optimize-autoloader
 ```
 
-Create a production `.env` with a real `SITE_URL`, database path, SMTP credentials, `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET`. Enable HTTPS.
+Create a production `.env` with a real `SITE_URL`, database path, SMTP credentials and `STRIPE_SECRET_KEY`. Enable HTTPS.
 
-Configure Stripe's webhook endpoint as:
-
-```text
-https://example.com/webhooks/stripe
-```
-
-Subscribe to the checkout events required by the application, including `checkout.session.completed` and asynchronous payment success where applicable.
-
-Before accepting real orders, test product pricing, basket behaviour, successful payment, cancellation, webhook delivery, duplicate webhook delivery, email delivery, stock rules, tax, shipping, refunds, legal notices and error handling.
+Before accepting real orders, test product pricing, basket behaviour, successful card payment, cancellation, return-page payment verification, email delivery, stock rules, tax, shipping, refunds, legal notices and error handling.
