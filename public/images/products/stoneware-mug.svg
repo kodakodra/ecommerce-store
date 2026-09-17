@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" role="img" aria-labelledby="title desc">
+<title id="title">Stoneware Mug</title><desc id="desc">A simple illustrated stoneware mug.</desc>
+<rect width="800" height="600" rx="32" fill="#eaf0f8"/>
+<path d="M252 206h250v168c0 79-54 130-125 130s-125-51-125-130z" fill="#f5f7fb" stroke="#172033" stroke-width="14"/>
+<path d="M502 252h44c44 0 72 28 72 67s-28 67-72 67h-44" fill="none" stroke="#172033" stroke-width="14"/>
+<path d="M302 270h150" stroke="#5ea6ff" stroke-width="12" stroke-linecap="round"/>
+<path d="M310 428h134" stroke="#5a6677" stroke-width="9" stroke-linecap="round" opacity=".65"/>
+</svg>
