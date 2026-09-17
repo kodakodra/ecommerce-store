@@ -23,7 +23,17 @@ if($currentPath==='/checkout' && is_post()){
     if(!csrf_valid($_POST['csrf_token']??null))$formErrors['form']='Your session has expired. Please reload the page and try again.';
     if($formData['name']===''||strlen($formData['name'])>100)$formErrors['name']='Please enter your name.';
     if(!filter_var($formData['email'],FILTER_VALIDATE_EMAIL)||strlen($formData['email'])>254)$formErrors['email']='Please enter a valid email address.';
-    if($formErrors===[]){try{$order=create_order($store,$formData['name'],$formData['email']);$session=create_checkout_session($store,$order);attach_stripe_session($store,$order['id'],$session->id);header('Location: '.$session->url,true,303);exit;}catch(Throwable $e){error_log('Checkout failed: '.$e->getMessage());$formErrors['form']='We could not start checkout right now. Please try again.';}}
+    if($formErrors===[]){try{
+        $order=create_order($store,$formData['name'],$formData['email']);
+        $session=create_checkout_session($store,$order);
+        $sessionUrl=(string)($session->url??'');
+        if($sessionUrl==='')throw new RuntimeException('Stripe Checkout Session was created without a hosted Checkout URL.');
+        error_log('Stripe Checkout Session created: '.$session->id);
+        attach_stripe_session($store,$order['id'],$session->id);
+        http_response_code(303);
+        header('Location: '.$sessionUrl,true,303);
+        exit;
+    }catch(Throwable $e){error_log('Checkout failed: '.$e->getMessage());$formErrors['form']='We could not start checkout right now. Please try again.';}}
 }
 if($currentPath==='/contact' && is_post()){
     if(!csrf_valid($_POST['csrf_token']??null))$formErrors['form']='Your session has expired. Please reload the page and try again.';
