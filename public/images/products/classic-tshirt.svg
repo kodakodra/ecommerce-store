@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" role="img" aria-labelledby="title desc">
+<title id="title">Classic Cotton T-Shirt</title><desc id="desc">A simple illustrated cotton T-shirt.</desc>
+<rect width="800" height="600" rx="32" fill="#eaf0f8"/>
+<path d="M292 154 196 208l62 104 55-34v166h174V278l55 34 62-104-96-54-60 82h-72z" fill="#172033"/>
+<path d="M326 154c4 41 32 62 74 62s70-21 74-62" fill="none" stroke="#f5f7fb" stroke-width="18" stroke-linecap="round"/>
+<path d="M314 264h172" stroke="#5ea6ff" stroke-width="10" stroke-linecap="round" opacity=".9"/>
+</svg>
