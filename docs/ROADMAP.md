@@ -7,8 +7,8 @@
 - [x] Configuration-driven product catalogue
 - [x] Session cart with server-side pricing
 - [x] SQLite order persistence
-- [x] Stripe Checkout integration
-- [x] Signed Stripe webhook endpoint
+- [x] Stripe Checkout integration using the server-side secret key
+- [x] Payment confirmation on the Stripe Checkout success return
 - [x] PHPMailer SMTP contact/order email
 - [x] CSRF protection and form validation
 - [x] Security response headers and safe error handling
@@ -19,11 +19,12 @@
 - [ ] Replace demo products/content with a real catalogue
 - [ ] Add real product images/assets
 - [ ] Review shipping, tax and fulfilment rules for the target business
-- [ ] Configure production Stripe keys and webhook endpoint
-- [ ] Test successful, cancelled and webhook-confirmed checkout flows
+- [ ] Configure production Stripe secret key
+- [ ] Test successful and cancelled checkout flows
 - [ ] Review final metadata, legal text and deployment configuration
 
 ## Explicitly out of scope
+- Stripe webhooks and webhook signing secrets
 - Admin/CMS panel
 - Customer accounts/authentication
 - Database-backed catalogue management
