@@ -11,8 +11,7 @@ A reusable PHP e-commerce foundation for small shops and service businesses. It 
 - Session-based basket
 - Server-side product pricing and totals
 - SQLite order persistence via PDO
-- Stripe Checkout using the Stripe PHP SDK
-- Signed Stripe webhook processing
+- Stripe Checkout using the Stripe PHP SDK and server-side secret key
 - PHPMailer SMTP contact and order-confirmation email
 - CSRF protection, honeypot anti-spam and contact throttling
 - Security response headers and production-safe error handling
@@ -46,11 +45,10 @@ The first request creates `database/store.sqlite` and seeds the configured demo 
 
 Store content, currency, checkout countries and demo products live in `config/store.php`. Secrets and environment-specific settings live in `.env`.
 
-Required payment variables:
+Required payment variable:
 
 ```text
 STRIPE_SECRET_KEY=sk_test_...
-STRIPE_WEBHOOK_SECRET=whsec_...
 ```
 
 Required email variables follow the same SMTP convention used by the other reusable projects in this collection. See `docs/EMAIL.md` and `docs/STRIPE.md`.
@@ -61,7 +59,9 @@ Never commit `.env`, Stripe secret keys or SMTP credentials.
 
 The browser submits only product identifiers and quantities. The server resolves products and prices from the configured catalogue, creates a pending order, then creates a Stripe Checkout Session using server-side amounts.
 
-Payment confirmation is handled by the signed Stripe webhook. The success page does not mark orders as paid. Webhook processing is idempotent using stored Stripe event IDs, and paid orders can trigger a confirmation email.
+After a successful card payment, Stripe returns the customer to `/checkout/success`. The server retrieves the Checkout Session using the secret key and verifies its paid status, local order reference, amount and currency before marking the order as paid. The confirmation email is sent after that verification.
+
+There is intentionally no webhook endpoint or webhook signing secret. Because confirmation happens on the success return, a payment is not automatically processed by this application when a customer completes payment but never returns to the site.
 
 This is a reusable foundation, not a production-ready fulfilment system. A real deployment must define tax, shipping, inventory, refund, cancellation, retention and legal requirements for the business.
 
@@ -72,18 +72,18 @@ config/          Store and product configuration
 database/        Local SQLite database files (ignored)
 docs/            Customisation, deployment, email, Stripe and roadmap guides
 public/          Web root and routing
-src/             Bootstrap, cart/order, contact, Stripe and webhook logic
+src/             Bootstrap, cart/order, contact and Stripe logic
 templates/       Page templates
 tests/           Smoke tests
 ```
 
 ## Routes
 
-`/` · `/products` · `/products/{slug}` · `/cart` · `/checkout` · `/checkout/success` · `/checkout/cancel` · `/contact` · `/privacy` · `/terms` · `/webhooks/stripe`
+`/` · `/products` · `/products/{slug}` · `/cart` · `/checkout` · `/checkout/success` · `/checkout/cancel` · `/contact` · `/privacy` · `/terms`
 
 ## Production notes
 
-Set the web server document root to `public/`, install dependencies with `composer install --no-dev --optimize-autoloader`, configure a real `.env`, enable HTTPS, configure Stripe's production webhook endpoint, and test a complete checkout plus webhook delivery before accepting real orders.
+Set the web server document root to `public/`, install dependencies with `composer install --no-dev --optimize-autoloader`, configure a real `.env`, enable HTTPS, use a production Stripe secret, and test a complete card checkout before accepting real orders.
 
 ## Licence and support
 
