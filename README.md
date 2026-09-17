@@ -7,11 +7,13 @@ A reusable PHP e-commerce foundation for small shops and service businesses. It 
 - PHP 8.2+
 - Composer
 - Configuration-driven product catalogue
+- Local SVG product image assets
 - Responsive storefront and product pages
 - Session-based basket
 - Server-side product pricing and totals
 - SQLite order persistence via PDO
-- Stripe Checkout using the Stripe PHP SDK and server-side secret key
+- Stripe Checkout using the Stripe PHP SDK and a server-side secret key
+- Return-page payment verification against the Stripe Checkout Session
 - PHPMailer SMTP contact and order-confirmation email
 - CSRF protection, honeypot anti-spam and contact throttling
 - Security response headers and production-safe error handling
@@ -39,11 +41,11 @@ Run the checks with:
 composer test
 ```
 
-The first request creates `database/store.sqlite` and seeds the configured demo products. The database file is ignored by Git.
+The first request creates `database/store.sqlite` and seeds the configured catalogue. The database file is ignored by Git.
 
 ## Configuration
 
-Store content, currency, checkout countries and demo products live in `config/store.php`. Secrets and environment-specific settings live in `.env`.
+Store content, currency, checkout countries, shipping copy and demo products live in `config/store.php`. Product images are local assets under `public/images/products/`. Secrets and environment-specific settings live in `.env`.
 
 Required payment variable:
 
@@ -63,7 +65,7 @@ After a successful card payment, Stripe returns the customer to `/checkout/succe
 
 There is intentionally no webhook endpoint or webhook signing secret. Because confirmation happens on the success return, a payment is not automatically processed by this application when a customer completes payment but never returns to the site.
 
-This is a reusable foundation, not a production-ready fulfilment system. A real deployment must define tax, shipping, inventory, refund, cancellation, retention and legal requirements for the business.
+The demonstration catalogue uses free UK delivery. A production deployment must define its own tax, shipping, inventory, refund, cancellation, retention and legal requirements.
 
 ## Structure
 
@@ -71,7 +73,7 @@ This is a reusable foundation, not a production-ready fulfilment system. A real 
 config/          Store and product configuration
 database/        Local SQLite database files (ignored)
 docs/            Customisation, deployment, email, Stripe and roadmap guides
-public/          Web root and routing
+public/          Web root, routing, CSS and product image assets
 src/             Bootstrap, cart/order, contact and Stripe logic
 templates/       Page templates
 tests/           Smoke tests
@@ -83,7 +85,7 @@ tests/           Smoke tests
 
 ## Production notes
 
-Set the web server document root to `public/`, install dependencies with `composer install --no-dev --optimize-autoloader`, configure a real `.env`, enable HTTPS, use a production Stripe secret, and test a complete card checkout before accepting real orders.
+Set the web server document root to `public/`, install dependencies with `composer install --no-dev --optimize-autoloader`, configure a real `.env`, enable HTTPS, use a production Stripe secret, and test a complete card checkout including cancellation and return-page verification before accepting real orders.
 
 ## Licence and support
 
