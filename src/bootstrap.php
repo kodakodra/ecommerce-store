@@ -8,7 +8,6 @@ $store=require $basePath.'/config/store.php';
 require $basePath.'/src/store.php';
 require $basePath.'/src/contact.php';
 require $basePath.'/src/stripe.php';
-require $basePath.'/src/webhook.php';
 
 ini_set('display_errors',env('APP_DEBUG','0')==='1'?'1':'0');
 error_reporting(E_ALL);
