@@ -1,0 +1,1 @@
+This file keeps the database directory in the repository. Local SQLite database files are ignored by Git.

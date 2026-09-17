@@ -1,0 +1,30 @@
+name: PHP checks
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php: ['8.2', '8.3']
+    name: PHP ${{ matrix.php }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: mbstring, curl, pdo_sqlite, sqlite3
+      - name: Validate Composer
+        run: composer validate --strict
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist
+      - name: Lint PHP
+        shell: bash
+        run: |
+          while IFS= read -r -d '' file; do php -l "$file"; done < <(find . -path './vendor' -prune -o -name '*.php' -print0)
+      - name: Run smoke tests
+        run: composer test

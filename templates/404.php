@@ -1,0 +1,1 @@
+<section class="section"><div class="container narrow"><p class="eyebrow">404</p><h1>Page not found.</h1><p>The requested page could not be found.</p><a class="button primary" href="/">Return home</a></div></section>

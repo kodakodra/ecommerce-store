@@ -1,0 +1,15 @@
+{
+    "name": "kodakodra/ecommerce-store",
+    "description": "Reusable PHP e-commerce foundation for small shops and service businesses with Stripe Checkout.",
+    "type": "project",
+    "require": {
+        "php": ">=8.2",
+        "phpmailer/phpmailer": "^7.0",
+        "stripe/stripe-php": "^21.2"
+    },
+    "scripts": {
+        "serve": "php -S localhost:8000 -t public public/router.php",
+        "test": "php tests/smoke.php"
+    },
+    "license": "MIT"
+}
