@@ -15,9 +15,9 @@ function store_db(array $store, ?string $path = null): PDO
     $db->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
     $db->exec('PRAGMA foreign_keys = ON');
     $db->exec('CREATE TABLE IF NOT EXISTS products (id INTEGER PRIMARY KEY AUTOINCREMENT, slug TEXT NOT NULL UNIQUE, name TEXT NOT NULL, summary TEXT NOT NULL, description TEXT NOT NULL, price_pence INTEGER NOT NULL, stock INTEGER NOT NULL DEFAULT 0, active INTEGER NOT NULL DEFAULT 1)');
-    $db->exec('CREATE TABLE IF NOT EXISTS orders (id TEXT PRIMARY KEY, stripe_session_id TEXT UNIQUE, status TEXT NOT NULL, customer_name TEXT NOT NULL, customer_email TEXT NOT NULL, total_pence INTEGER NOT NULL, currency TEXT NOT NULL, stripe_payment_intent_id TEXT, shipping_name TEXT, shipping_address_json TEXT, created_at TEXT NOT NULL, paid_at TEXT)');
-    $db->exec('CREATE TABLE IF NOT EXISTS order_items (id INTEGER PRIMARY KEY AUTOINCREMENT, order_id TEXT NOT NULL REFERENCES orders(id) ON DELETE CASCADE, product_slug TEXT NOT NULL, product_name TEXT NOT NULL, unit_price_pence INTEGER NOT NULL, quantity INTEGER NOT NULL, line_total_pence INTEGER NOT NULL)');
-    $db->exec('CREATE TABLE IF NOT EXISTS webhook_events (event_id TEXT PRIMARY KEY, event_type TEXT NOT NULL, received_at TEXT NOT NULL)');
+    $db->exec('CREATE TABLE IF NOT EXISTS orders (id TEXT PRIMARY KEY, stripe_session_id TEXT UNIQUE, status TEXT NOT NULL, customer_name TEXT NOT NULL, customer_email TEXT NOT NULL, total_pence INTEGER NOT NULL, currency TEXT NOT NULL, stripe_payment_intent_id TEXT, shipping_name TEXT, shipping_address_json TEXT, created_at TEXT NOT NULL, paid_at TEXT, confirmation_sent_at TEXT)');
+    $columns = array_column($db->query('PRAGMA table_info(orders)')->fetchAll(), 'name');
+    if (!in_array('confirmation_sent_at', $columns, true)) $db->exec('ALTER TABLE orders ADD COLUMN confirmation_sent_at TEXT');
     $stmt = $db->prepare('INSERT OR IGNORE INTO products (slug,name,summary,description,price_pence,stock,active) VALUES (:slug,:name,:summary,:description,:price,:stock,1)');
     foreach ($store['products'] as $product) $stmt->execute(['slug'=>$product['slug'],'name'=>$product['name'],'summary'=>$product['summary'],'description'=>$product['description'],'price'=>$product['price_pence'],'stock'=>$product['stock']]);
     return $connections[$key] = $db;
@@ -109,7 +109,10 @@ function create_order(array $store, string $name, string $email): array
         $itemStmt = $db->prepare('INSERT INTO order_items (order_id,product_slug,product_name,unit_price_pence,quantity,line_total_pence) VALUES (:order_id,:slug,:name,:price,:quantity,:line)');
         foreach ($items as $item) $itemStmt->execute(['order_id'=>$id,'slug'=>$item['product']['slug'],'name'=>$item['product']['name'],'price'=>$item['product']['price_pence'],'quantity'=>$item['quantity'],'line'=>$item['line_total']]);
         $db->commit();
-    } catch (Throwable $e) { $db->rollBack(); throw $e; }
+    } catch (Throwable $e) {
+        $db->rollBack();
+        throw $e;
+    }
     return ['id'=>$id,'total_pence'=>$total,'items'=>$items,'customer_name'=>$name,'customer_email'=>$email,'currency'=>$store['currency']];
 }
 
@@ -117,35 +120,6 @@ function attach_stripe_session(array $store, string $orderId, string $sessionId)
 {
     $stmt = store_db($store)->prepare('UPDATE orders SET stripe_session_id = :session WHERE id = :id');
     $stmt->execute(['session'=>$sessionId,'id'=>$orderId]);
-}
-
-function mark_order_paid(array $store, string $eventId, string $eventType, object $session): ?array
-{
-    $db = store_db($store);
-    $db->beginTransaction();
-    try {
-        $eventStmt = $db->prepare('INSERT INTO webhook_events (event_id,event_type,received_at) VALUES (:id,:type,:received)');
-        $eventStmt->execute(['id'=>$eventId,'type'=>$eventType,'received'=>date('c')]);
-        $orderId = (string) ($session->metadata->order_id ?? $session->client_reference_id ?? '');
-        if ($orderId === '') { $db->commit(); return null; }
-        $orderStmt = $db->prepare('SELECT * FROM orders WHERE id = :id LIMIT 1');
-        $orderStmt->execute(['id'=>$orderId]);
-        $order = $orderStmt->fetch();
-        if (!$order) { $db->commit(); return null; }
-        if ($order['status'] !== 'paid') {
-            $shipping = $session->shipping_details ?? null;
-            $shippingName = $shipping?->name ?? null;
-            $shippingAddress = $shipping?->address ?? null;
-            $stmt = $db->prepare('UPDATE orders SET status="paid", paid_at=:paid, stripe_payment_intent_id=:intent, shipping_name=:shipping_name, shipping_address_json=:shipping WHERE id=:id');
-            $stmt->execute(['paid'=>date('c'),'intent'=>(string)($session->payment_intent ?? ''),'shipping_name'=>$shippingName,'shipping'=>is_object($shippingAddress) ? json_encode($shippingAddress, JSON_UNESCAPED_SLASHES) : null,'id'=>$orderId]);
-        }
-        $db->commit();
-        return get_order($store, $orderId);
-    } catch (PDOException $e) {
-        $db->rollBack();
-        if (str_contains($e->getMessage(), 'UNIQUE constraint failed: webhook_events.event_id')) return null;
-        throw $e;
-    }
 }
 
 function get_order(array $store, string $id): ?array
@@ -158,4 +132,50 @@ function get_order(array $store, string $id): ?array
     $itemStmt->execute(['id'=>$id]);
     $order['items'] = $itemStmt->fetchAll();
     return $order;
+}
+
+function mark_order_paid(array $store, object $session): ?array
+{
+    $orderId = (string) ($session->metadata->order_id ?? $session->client_reference_id ?? '');
+    $sessionId = (string) ($session->id ?? '');
+    if ($orderId === '' || $sessionId === '') return null;
+
+    $db = store_db($store);
+    $db->beginTransaction();
+    try {
+        $stmt = $db->prepare('SELECT * FROM orders WHERE id=:id LIMIT 1');
+        $stmt->execute(['id'=>$orderId]);
+        $order = $stmt->fetch();
+        if (!$order || $order['stripe_session_id'] !== $sessionId) {
+            $db->rollBack();
+            return null;
+        }
+
+        $status = (string) ($session->payment_status ?? '');
+        $amount = (int) ($session->amount_total ?? -1);
+        $currency = strtolower((string) ($session->currency ?? ''));
+        if ($status !== 'paid' || $amount !== (int)$order['total_pence'] || $currency !== strtolower((string)$order['currency'])) {
+            $db->rollBack();
+            return null;
+        }
+
+        if ($order['status'] !== 'paid') {
+            $shipping = $session->shipping_details ?? null;
+            $shippingName = $shipping?->name ?? null;
+            $shippingAddress = $shipping?->address ?? null;
+            $update = $db->prepare('UPDATE orders SET status="paid", paid_at=:paid, stripe_payment_intent_id=:intent, shipping_name=:shipping_name, shipping_address_json=:shipping WHERE id=:id');
+            $update->execute(['paid'=>date('c'),'intent'=>(string)($session->payment_intent ?? ''),'shipping_name'=>$shippingName,'shipping'=>is_object($shippingAddress) ? json_encode($shippingAddress, JSON_UNESCAPED_SLASHES) : null,'id'=>$orderId]);
+        }
+        $db->commit();
+        return get_order($store, $orderId);
+    } catch (Throwable $e) {
+        if ($db->inTransaction()) $db->rollBack();
+        throw $e;
+    }
+}
+
+function mark_order_confirmation_sent(array $store, string $orderId): void
+{
+    $stmt = store_db($store)->prepare('UPDATE orders SET confirmation_sent_at=:sent WHERE id=:id AND confirmation_sent_at IS NULL');
+    $stmt->execute(['sent'=>date('c'),'id'=>$orderId]);
 }
